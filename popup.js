@@ -1,0 +1,46 @@
+// When popup opens, ask content script for the job title
+document.addEventListener('DOMContentLoaded', async () => {
+  // Get current tab
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  // Ask content script to extract job title from the page
+  try {
+    const response = await chrome.tabs.sendMessage(tab.id, { action: 'getJobInfo' });
+    if (response && response.role) {
+      document.getElementById('role').value = response.role;
+    }
+    if (response && response.company) {
+      document.getElementById('company').value = response.company;
+    }
+  } catch (e) {
+    // Content script not on this page — that's fine
+  }
+});
+
+document.getElementById('save').addEventListener('click', async () => {
+  const company = document.getElementById('company').value.trim();
+  const role = document.getElementById('role').value.trim();
+
+  if (!company || !role) {
+    alert('Please fill in both fields');
+    return;
+  }
+
+  // Save to Chrome's local storage
+  const application = {
+    id: Date.now().toString(),      // Simple unique ID using timestamp
+    company,
+    role,
+    appliedAt: new Date().toISOString(),
+    status: 'applied',
+    url: tab.url || ''
+  };
+
+  // Get existing applications, add new one
+  const { applications = [] } = await chrome.storage.local.get('applications');
+  applications.push(application);
+  await chrome.storage.local.set({ applications });
+
+  document.getElementById('status').style.display = 'block';
+  setTimeout(() => window.close(), 1000);
+});
