@@ -46,4 +46,9 @@ document.getElementById('save').addEventListener('click', async () => {
 
   document.getElementById('status').style.display = 'block';
   setTimeout(() => window.close(), 1000);
+  
 });
+document.getElementById('view-all').addEventListener('click', () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+});
+

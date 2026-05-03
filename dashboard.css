@@ -1,0 +1,67 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 24px;
+  background: #f9fafb;
+  color: #111;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+h1 { margin: 0; font-size: 22px; }
+
+#total-count { color: #6b7280; font-size: 14px; }
+
+#empty-state {
+  text-align: center;
+  padding: 60px 0;
+  color: #9ca3af;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+th {
+  background: #f3f4f6;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 12px 16px;
+  border-top: 1px solid #f3f4f6;
+  font-size: 14px;
+}
+
+tr:hover td { background: #f9fafb; }
+
+.badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-applied    { background: #dbeafe; color: #1d4ed8; }
+.badge-interview  { background: #fef9c3; color: #a16207; }
+.badge-assessment { background: #ede9fe; color: #6d28d9; }
+.badge-offer      { background: #dcfce7; color: #15803d; }
+.badge-rejected   { background: #fee2e2; color: #b91c1c; }
+
+a { color: #2563eb; text-decoration: none; font-size: 13px; }
+a:hover { text-decoration: underline; }

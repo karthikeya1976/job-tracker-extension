@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Job Tracker Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="header">
+    <h1>Job Tracker</h1>
+    <span id="total-count">0 applications</span>
+  </div>
+
+  <div id="empty-state">
+    <p>No applications logged yet.</p>
+    <p>Click the extension icon on a job page to get started.</p>
+  </div>
+
+  <table id="app-table">
+    <thead>
+      <tr>
+        <th>Company</th>
+        <th>Role</th>
+        <th>Date Applied</th>
+        <th>Status</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody id="app-body"></tbody>
+  </table>
+
+  <script src="dashboard.js"></script>
+</body>
+</html>

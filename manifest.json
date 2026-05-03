@@ -17,5 +17,11 @@
   ],
   "background": {
     "service_worker": "background.js"
+  },
+  "web_accessible_resources" : [
+  {
+    "resources": ["dashboard.html"],
+    "matches": ["<all_urls>"]
   }
+]
 }
