@@ -5,6 +5,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabUrl = tab.url || '';
+  // Pre-fill from auto-detected application (if background script caught an Apply click)
+const { pendingApplication } = await chrome.storage.session.get('pendingApplication');
+if (pendingApplication) {
+  if (pendingApplication.role) document.getElementById('role').value = pendingApplication.role;
+  if (pendingApplication.company) document.getElementById('company').value = pendingApplication.company;
+  await chrome.storage.session.remove('pendingApplication');
+}
+
 
   // Ask content script to extract job title from the page
   try {
