@@ -1,7 +1,10 @@
 // When popup opens, ask content script for the job title
+let currentTabUrl = '';
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  currentTabUrl = tab.url || '';
 
   // Ask content script to extract job title from the page
   try {
@@ -33,7 +36,7 @@ document.getElementById('save').addEventListener('click', async () => {
     role,
     appliedAt: new Date().toISOString(),
     status: 'applied',
-    url: tab.url || ''
+    url: currentTabUrl
   };
 
   // Get existing applications, add new one
