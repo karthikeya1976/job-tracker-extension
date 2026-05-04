@@ -130,5 +130,6 @@ async function loadApplications() {
 document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('filter-status').addEventListener('change', applyFilters);
 document.getElementById('sort-order').addEventListener('change', applyFilters);
+document.getElementById('sync-gmail').addEventListener('click', syncGmail);
 
 loadApplications();

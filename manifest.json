@@ -3,7 +3,11 @@
   "name": "Job Tracker",
   "version": "0.1.0",
   "description": "Track your job applications automatically",
-  "permissions": ["storage", "activeTab", "scripting"],
+  "permissions": ["storage", "activeTab", "scripting", "identity"],
+  "oauth2": {
+    "client_id": "469933912167-38odv5r81vea6ehishmapthqiopoiif1.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
+  },
   "action": {
     "default_popup": "popup.html"
   },

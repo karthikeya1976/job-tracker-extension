@@ -8,7 +8,11 @@
 <body>
   <div class="header">
     <h1>Job Tracker</h1>
-    <span id="total-count">0 applications</span>
+    <div class="header-right">
+      <span id="gmail-status"></span>
+      <button id="sync-gmail">Sync Gmail</button>
+      <span id="total-count">0 applications</span>
+    </div>
   </div>
 
   <div class="stats-panel">
@@ -69,6 +73,7 @@
     <tbody id="app-body"></tbody>
   </table>
 
+  <script src="email.js"></script>
   <script src="dashboard.js"></script>
 </body>
 </html>
