@@ -8,7 +8,6 @@ const STATUS_CLASSES = {
   rejected:   'badge-rejected'
 };
 
-// Keep the source-of-truth array in memory so we don't re-fetch on every action
 let allApplications = [];
 
 function formatDate(isoString) {
@@ -17,11 +16,41 @@ function formatDate(isoString) {
   });
 }
 
+function updateStats(applications) {
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+
+  document.getElementById('stat-total').textContent     = applications.length;
+  document.getElementById('stat-interview').textContent = applications.filter(a => a.status === 'interview').length;
+  document.getElementById('stat-offer').textContent     = applications.filter(a => a.status === 'offer').length;
+  document.getElementById('stat-rejected').textContent  = applications.filter(a => a.status === 'rejected').length;
+  document.getElementById('stat-week').textContent      = applications.filter(a => new Date(a.appliedAt) >= oneWeekAgo).length;
+}
+
+// Derives a filtered+sorted subset from allApplications — never modifies allApplications
+function getFiltered() {
+  const search = document.getElementById('search').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const order  = document.getElementById('sort-order').value;
+
+  return [...allApplications]
+    .filter(app => {
+      const matchesSearch = app.company.toLowerCase().includes(search) ||
+                            app.role.toLowerCase().includes(search);
+      const matchesStatus = status === '' || app.status === status;
+      return matchesSearch && matchesStatus;
+    })
+    .sort((a, b) => {
+      const diff = new Date(b.appliedAt) - new Date(a.appliedAt);
+      return order === 'newest' ? diff : -diff;
+    });
+}
+
 function renderTable(applications) {
-  const tbody = document.getElementById('app-body');
+  const tbody     = document.getElementById('app-body');
   const emptyState = document.getElementById('empty-state');
-  const table = document.getElementById('app-table');
-  const countEl = document.getElementById('total-count');
+  const table     = document.getElementById('app-table');
+  const countEl   = document.getElementById('total-count');
 
   countEl.textContent = `${applications.length} application${applications.length !== 1 ? 's' : ''}`;
 
@@ -45,21 +74,22 @@ function renderTable(applications) {
         </select>
       </td>
       <td>${app.url ? `<a href="${app.url}" target="_blank">View</a>` : '—'}</td>
-      <td>
-        <button class="delete-btn" data-id="${app.id}">Delete</button>
-      </td>
+      <td><button class="delete-btn" data-id="${app.id}">Delete</button></td>
     </tr>
   `).join('');
 
-  // Attach status change listeners
   tbody.querySelectorAll('.status-select').forEach(select => {
-    select.addEventListener('change', (e) => updateStatus(e.target.dataset.id, e.target.value));
+    select.addEventListener('change', e => updateStatus(e.target.dataset.id, e.target.value));
   });
 
-  // Attach delete listeners
   tbody.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => deleteApplication(e.target.dataset.id));
+    btn.addEventListener('click', e => deleteApplication(e.target.dataset.id));
   });
+}
+
+// Re-derives filtered view and re-renders — called on every filter/search change
+function applyFilters() {
+  renderTable(getFiltered());
 }
 
 async function updateStatus(id, newStatus) {
@@ -67,8 +97,8 @@ async function updateStatus(id, newStatus) {
     app.id === id ? { ...app, status: newStatus, updatedAt: new Date().toISOString() } : app
   );
   await chrome.storage.local.set({ applications: allApplications });
+  updateStats(allApplications);
 
-  // Update just the select's CSS class without re-rendering the whole table
   const select = document.querySelector(`.status-select[data-id="${id}"]`);
   select.className = `status-select ${STATUS_CLASSES[newStatus] || 'badge-applied'}`;
 }
@@ -77,8 +107,7 @@ async function deleteApplication(id) {
   if (!confirm('Delete this application?')) return;
   allApplications = allApplications.filter(app => app.id !== id);
   await chrome.storage.local.set({ applications: allApplications });
-
-  // Remove the row from the DOM directly — no need to re-render everything
+  updateStats(allApplications);
   document.querySelector(`tr[data-id="${id}"]`).remove();
 
   const countEl = document.getElementById('total-count');
@@ -92,10 +121,14 @@ async function deleteApplication(id) {
 
 async function loadApplications() {
   const { applications = [] } = await chrome.storage.local.get('applications');
-  allApplications = [...applications].sort(
-    (a, b) => new Date(b.appliedAt) - new Date(a.appliedAt)
-  );
-  renderTable(allApplications);
+  allApplications = applications;
+  updateStats(allApplications);
+  renderTable(getFiltered());
 }
+
+// Wire up filter controls — each one just calls applyFilters()
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('filter-status').addEventListener('change', applyFilters);
+document.getElementById('sort-order').addEventListener('change', applyFilters);
 
 loadApplications();
