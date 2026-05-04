@@ -46,6 +46,12 @@ function getFiltered() {
     });
 }
 
+function isStale(app) {
+  if (app.status !== 'applied') return false;
+  const daysSince = (Date.now() - new Date(app.appliedAt)) / (1000 * 60 * 60 * 24);
+  return daysSince > 14;
+}
+
 function renderTable(applications) {
   const tbody     = document.getElementById('app-body');
   const emptyState = document.getElementById('empty-state');
@@ -64,8 +70,8 @@ function renderTable(applications) {
   table.style.display = 'table';
 
   tbody.innerHTML = applications.map(app => `
-    <tr data-id="${app.id}">
-      <td>${app.company}</td>
+    <tr data-id="${app.id}" class="${isStale(app) ? 'stale-row' : ''}">
+      <td>${app.company} ${isStale(app) ? '<span class="stale-badge">No response</span>' : ''}</td>
       <td>${app.role}</td>
       <td>${formatDate(app.appliedAt)}</td>
       <td>
@@ -127,6 +133,26 @@ async function loadApplications() {
 }
 
 // Wire up filter controls — each one just calls applyFilters()
+function exportCSV() {
+  const rows = [
+    ['Company', 'Role', 'Date Applied', 'Status', 'URL'],
+    ...allApplications.map(a => [
+      a.company, a.role,
+      new Date(a.appliedAt).toLocaleDateString(),
+      a.status, a.url || ''
+    ])
+  ];
+  const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `job-applications-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('export-csv').addEventListener('click', exportCSV);
 document.getElementById('search').addEventListener('input', applyFilters);
 document.getElementById('filter-status').addEventListener('change', applyFilters);
 document.getElementById('sort-order').addEventListener('change', applyFilters);

@@ -11,10 +11,13 @@
              color: white; border: none; border-radius: 4px; cursor: pointer; }
     button:hover { background: #1d4ed8; }
     #status { margin-top: 10px; font-size: 13px; color: green; display: none; }
+    #not-job-page { font-size: 12px; color: #f59e0b; background: #fef3c7;
+                    padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; }
   </style>
 </head>
 <body>
   <h2>Log Application</h2>
+  <div id="not-job-page">Not on a recognized job page — you can still log manually.</div>
   <input type="text" id="company" placeholder="Company name" />
   <input type="text" id="role" placeholder="Role / Position" />
   <button id="save">Save Application</button>

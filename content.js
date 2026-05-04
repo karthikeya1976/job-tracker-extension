@@ -26,9 +26,11 @@ function extractJobInfo() {
 
   if (hostname.includes('linkedin.com')) {
     info.role = document.querySelector('.job-details-jobs-unified-top-card__job-title h1')?.innerText
+             || document.querySelector('.jobs-unified-top-card__job-title h1')?.innerText
              || document.querySelector('h1.t-24')?.innerText
              || '';
     info.company = document.querySelector('.job-details-jobs-unified-top-card__company-name a')?.innerText
+                || document.querySelector('.jobs-unified-top-card__company-name a')?.innerText
                 || document.querySelector('.topcard__org-name-link')?.innerText
                 || '';
   }
