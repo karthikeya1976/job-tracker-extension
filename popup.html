@@ -17,13 +17,26 @@
     #status { margin-top: 10px; font-size: 13px; color: green; display: none; }
     #not-job-page { font-size: 12px; color: #f59e0b; background: #fef3c7;
                     padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; }
+    #company-rating { display: none; font-size: 12px; margin: -6px 0 10px;
+                      padding: 6px 8px; background: #f9fafb; border-radius: 4px;
+                      border: 1px solid #e5e7eb; }
+    .rating-grade  { font-weight: 700; margin-right: 6px; }
+    .rating-detail { color: #374151; margin-right: 6px; }
+    .rating-label  { color: #9ca3af; }
+    #opt-in { font-size: 11px; color: #6b7280; margin-top: 8px; display: flex;
+              align-items: center; gap: 5px; }
   </style>
 </head>
 <body>
   <h2>Log Application</h2>
   <div id="not-job-page">Not on a recognized job page — you can still log manually.</div>
   <input type="text" id="company" placeholder="Company name" />
+  <div id="company-rating"></div>
   <input type="text" id="role" placeholder="Role / Position" />
+  <label id="opt-in">
+    <input type="checkbox" id="contribute" />
+    Contribute anonymously to company ratings
+  </label>
   <div class="btn-row">
     <button id="bookmark">Bookmark</button>
     <button id="applied">Mark as Applied</button>

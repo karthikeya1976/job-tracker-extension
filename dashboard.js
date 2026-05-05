@@ -73,7 +73,11 @@ function renderTable(applications) {
 
   tbody.innerHTML = applications.map(app => `
     <tr data-id="${app.id}" class="${isStale(app) ? 'stale-row' : ''}">
-      <td>${app.company} ${isStale(app) ? '<span class="stale-badge">No response</span>' : ''}</td>
+      <td>
+        ${app.company}
+        ${isStale(app) ? '<span class="stale-badge">No response</span>' : ''}
+        ${companyRatings[app._ratingId] ? `<span class="rating-chip">★ ${companyRatings[app._ratingId].grade}</span>` : ''}
+      </td>
       <td>${app.role}</td>
       <td>${formatDate(app.appliedAt)}</td>
       <td>
@@ -127,9 +131,52 @@ async function deleteApplication(id) {
   }
 }
 
+const API_BASE = 'http://localhost:3000/api';
+const STRIP_SUFFIXES = new Set([
+  'inc', 'llc', 'ltd', 'corp', 'corporation', 'co',
+  'technologies', 'technology', 'services', 'solutions',
+  'consulting', 'group', 'company', 'the', 'and'
+]);
+
+function normalizeCompanyName(name) {
+  return name.toLowerCase().replace(/[^a-z0-9\s]/g, '')
+    .split(/\s+/).filter(w => w.length > 0 && !STRIP_SUFFIXES.has(w)).join(' ').trim();
+}
+
+async function hashCompanyName(name) {
+  const data = new TextEncoder().encode(normalizeCompanyName(name));
+  const buf  = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('').slice(0,16);
+}
+
+// companyRatings maps company_id → { grade, score, responseRate, avgDays }
+let companyRatings = {};
+
+async function loadRatings(applications) {
+  try {
+    const ids = await Promise.all([...new Set(applications.map(a => a.company))]
+      .map(async name => ({ name, id: await hashCompanyName(name) })));
+
+    const idList = ids.map(x => x.id).join(',');
+    const res    = await fetch(`${API_BASE}/companies/batch?ids=${idList}`);
+    const data   = await res.json();
+
+    companyRatings = Object.fromEntries(data.filter(r => r.score).map(r => [r.id, r]));
+  } catch {
+    companyRatings = {}; // server offline — silently skip
+  }
+}
+
 async function loadApplications() {
   const { applications = [] } = await chrome.storage.local.get('applications');
-  allApplications = applications;
+
+  // Attach hashed company ID to each app so renderTable can look up ratings
+  allApplications = await Promise.all(applications.map(async app => ({
+    ...app,
+    _ratingId: await hashCompanyName(app.company)
+  })));
+
+  await loadRatings(allApplications);
   updateStats(allApplications);
   renderTable(getFiltered());
 }

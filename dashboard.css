@@ -144,6 +144,18 @@ a:hover { text-decoration: underline; }
 
 .stale-row td { background: #fffbeb; }
 
+.rating-chip {
+  font-size: 10px;
+  font-weight: 700;
+  background: #f0fdf4;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+  border-radius: 4px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 .stale-badge {
   font-size: 10px;
   background: #fef3c7;
