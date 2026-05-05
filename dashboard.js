@@ -1,6 +1,7 @@
-const STATUSES = ['applied', 'assessment', 'interview', 'offer', 'rejected'];
+const STATUSES = ['saved', 'applied', 'assessment', 'interview', 'offer', 'rejected'];
 
 const STATUS_CLASSES = {
+  saved:      'badge-saved',
   applied:    'badge-applied',
   interview:  'badge-interview',
   assessment: 'badge-assessment',
@@ -21,6 +22,7 @@ function updateStats(applications) {
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
 
   document.getElementById('stat-total').textContent     = applications.length;
+  document.getElementById('stat-saved').textContent     = applications.filter(a => a.status === 'saved').length;
   document.getElementById('stat-interview').textContent = applications.filter(a => a.status === 'interview').length;
   document.getElementById('stat-offer').textContent     = applications.filter(a => a.status === 'offer').length;
   document.getElementById('stat-rejected').textContent  = applications.filter(a => a.status === 'rejected').length;

@@ -7,9 +7,13 @@
     h2 { margin: 0 0 12px; font-size: 16px; color: #1a1a1a; }
     input { width: 100%; padding: 8px; margin-bottom: 10px;
             border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-    button { width: 100%; padding: 10px; background: #2563eb;
-             color: white; border: none; border-radius: 4px; cursor: pointer; }
-    button:hover { background: #1d4ed8; }
+    .btn-row { display: flex; gap: 8px; margin-top: 4px; }
+    #bookmark { flex: 1; padding: 10px; background: white; color: #2563eb;
+                border: 1.5px solid #2563eb; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    #bookmark:hover { background: #eff6ff; }
+    #applied { flex: 2; padding: 10px; background: #2563eb; color: white;
+               border: none; border-radius: 4px; cursor: pointer; font-size: 13px; }
+    #applied:hover { background: #1d4ed8; }
     #status { margin-top: 10px; font-size: 13px; color: green; display: none; }
     #not-job-page { font-size: 12px; color: #f59e0b; background: #fef3c7;
                     padding: 8px; border-radius: 4px; margin-bottom: 10px; display: none; }
@@ -20,8 +24,11 @@
   <div id="not-job-page">Not on a recognized job page — you can still log manually.</div>
   <input type="text" id="company" placeholder="Company name" />
   <input type="text" id="role" placeholder="Role / Position" />
-  <button id="save">Save Application</button>
-  <div id="status">Saved!</div>
+  <div class="btn-row">
+    <button id="bookmark">Bookmark</button>
+    <button id="applied">Mark as Applied</button>
+  </div>
+  <div id="status"></div>
   <a id="view-all" href="#" style="display:block; text-align:center; margin-top:12px; font-size:13px; color:#2563eb;">
     View all applications →
   </a>

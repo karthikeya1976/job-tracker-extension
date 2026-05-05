@@ -1,11 +1,10 @@
-// When popup opens, ask content script for the job title
 let currentTabUrl = '';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTabUrl = tab.url || '';
 
-  // Pre-fill from auto-detected application (if background script caught an Apply click)
+  // Pre-fill from auto-detected application
   const { pendingApplication } = await chrome.storage.session.get('pendingApplication');
   if (pendingApplication) {
     if (pendingApplication.role) document.getElementById('role').value = pendingApplication.role;
@@ -13,22 +12,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     await chrome.storage.session.remove('pendingApplication');
   }
 
-  // Ask content script to extract job title from the page
+  // Ask content script to extract job info from the page
   try {
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'getJobInfo' });
-    if (response && response.role) {
-      document.getElementById('role').value = response.role;
-    }
-    if (response && response.company) {
-      document.getElementById('company').value = response.company;
-    }
+    if (response?.role) document.getElementById('role').value = response.role;
+    if (response?.company) document.getElementById('company').value = response.company;
   } catch (e) {
-    // Content script not on this page — show the warning
     document.getElementById('not-job-page').style.display = 'block';
   }
 });
 
-document.getElementById('save').addEventListener('click', async () => {
+async function saveApplication(status) {
   const company = document.getElementById('company').value.trim();
   const role = document.getElementById('role').value.trim();
 
@@ -42,7 +36,7 @@ document.getElementById('save').addEventListener('click', async () => {
     company,
     role,
     appliedAt: new Date().toISOString(),
-    status: 'applied',
+    status,
     url: currentTabUrl
   };
 
@@ -50,9 +44,15 @@ document.getElementById('save').addEventListener('click', async () => {
   applications.push(application);
   await chrome.storage.local.set({ applications });
 
-  document.getElementById('status').style.display = 'block';
+  const statusEl = document.getElementById('status');
+  statusEl.textContent = status === 'saved' ? 'Bookmarked!' : 'Marked as Applied!';
+  statusEl.style.color = status === 'saved' ? '#6b7280' : 'green';
+  statusEl.style.display = 'block';
   setTimeout(() => window.close(), 1000);
-});
+}
+
+document.getElementById('bookmark').addEventListener('click', () => saveApplication('saved'));
+document.getElementById('applied').addEventListener('click', () => saveApplication('applied'));
 
 document.getElementById('view-all').addEventListener('click', () => {
   chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });

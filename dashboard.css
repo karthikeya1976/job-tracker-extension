@@ -57,6 +57,7 @@ tr:hover td { background: #f9fafb; }
   text-transform: capitalize;
 }
 
+.badge-saved      { background: #f3f4f6; color: #6b7280; }
 .badge-applied    { background: #dbeafe; color: #1d4ed8; }
 .badge-interview  { background: #fef9c3; color: #a16207; }
 .badge-assessment { background: #ede9fe; color: #6d28d9; }
