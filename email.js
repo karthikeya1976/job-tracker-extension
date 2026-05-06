@@ -67,7 +67,7 @@ async function syncGmail() {
     statusEl.textContent = 'Fetching emails...';
     const emails = await fetchJobEmails(token);
 
-    statusEl.textContent = `Fetched ${emails.length} emails. Matching to applications...`;
+    statusEl.textContent = `Fetched ${emails.length} emails. Classifying with AI...`;
 
     const { applications = [] } = await chrome.storage.local.get('applications');
     const result = matchEmailsToApplications(emails, applications);
@@ -96,18 +96,16 @@ function getCompanyKeywords(companyName) {
     .filter(word => word.length > 2 && !SKIP_WORDS.has(word));
 }
 
-function matchEmailsToApplications(emails, applications) {
+async function matchEmailsToApplications(emails, applications) {
   let changedCount = 0;
 
-  const updated = applications.map(app => {
+  const updated = await Promise.all(applications.map(async app => {
     const keywords = getCompanyKeywords(app.company);
     if (keywords.length === 0) return app;
 
     const match = emails.find(email => {
       const fromLower = email.from.toLowerCase();
       const subjectLower = email.subject.toLowerCase();
-
-      // Match if ANY significant keyword from company name appears in sender or subject
       return keywords.some(word =>
         fromLower.includes(word) || subjectLower.includes(word)
       );
@@ -115,27 +113,41 @@ function matchEmailsToApplications(emails, applications) {
 
     if (!match) return app;
 
-    const newStatus = classifyEmail(match.subject, match.snippet);
+    const newStatus = await classifyEmail(match.subject, match.snippet);
     if (!newStatus || newStatus === app.status) return app;
 
     changedCount++;
     return { ...app, status: newStatus, updatedAt: match.date };
-  });
+  }));
 
   return { updated, changedCount };
 }
 
-function classifyEmail(subject, body) {
-  const text = (subject + ' ' + body).toLowerCase();
+// Calls backend ML classification, falls back to regex when server is offline
+async function classifyEmail(subject, snippet) {
+  try {
+    const res = await fetch('http://localhost:3000/api/classify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, snippet })
+    });
+    if (!res.ok) throw new Error(`classify ${res.status}`);
+    const { label } = await res.json();
+    // 'acknowledged' and 'unknown' don't map to a stored status
+    if (label === 'rejected' || label === 'interview' || label === 'assessment') return label;
+    return null;
+  } catch {
+    return classifyEmailFallback(subject, snippet);
+  }
+}
 
+function classifyEmailFallback(subject, body) {
+  const text = (subject + ' ' + body).toLowerCase();
   if (/unfortunately|not moving forward|other candidates|not selected|decided to move forward with other|position has been filled/.test(text))
     return 'rejected';
-
   if (/interview|schedule a call|speak with you|meet with|next steps|hiring manager/.test(text))
     return 'interview';
-
   if (/assessment|coding challenge|take-home|technical test|hacker ?rank|code ?signal/.test(text))
     return 'assessment';
-
   return null;
 }

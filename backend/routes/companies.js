@@ -1,7 +1,44 @@
 const express = require('express');
 const router = express.Router();
+const Anthropic = require('@anthropic-ai/sdk');
 const db = require('../db');
 const { hashCompanyName } = require('../utils/normalize');
+
+const anthropic = new Anthropic();
+
+const VALID_LABELS = new Set(['rejected', 'interview', 'assessment', 'acknowledged', 'unknown']);
+
+// POST /api/classify — ML-based email intent classification
+router.post('/classify', async (req, res) => {
+  const { subject, snippet } = req.body;
+  if (!subject && !snippet) return res.status(400).json({ error: 'subject or snippet required' });
+
+  try {
+    const message = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 10,
+      system: [
+        'Classify this job application email. Reply with exactly one word:',
+        '  rejected     – company is declining the candidate',
+        '  interview    – company wants to schedule a call or interview',
+        '  assessment   – company is sending a coding test or take-home',
+        '  acknowledged – company confirms they received the application',
+        '  unknown      – email does not fit any category above'
+      ].join('\n'),
+      messages: [{
+        role: 'user',
+        content: `Subject: ${subject}\n\n${snippet}`
+      }]
+    });
+
+    const raw = message.content[0].text.trim().toLowerCase();
+    const label = VALID_LABELS.has(raw) ? raw : 'unknown';
+    res.json({ label });
+  } catch (err) {
+    console.error('classify error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // POST /api/events — submit an application outcome (opt-in users only)
 router.post('/events', (req, res) => {
