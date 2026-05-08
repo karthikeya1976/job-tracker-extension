@@ -62,20 +62,38 @@ async function syncGmail() {
 
   try {
     statusEl.textContent = 'Connecting to Gmail...';
-    const token = await getGmailToken();
+    const gmailToken = await getGmailToken();
 
     statusEl.textContent = 'Fetching emails...';
-    const emails = await fetchJobEmails(token);
+    const emails = await fetchJobEmails(gmailToken);
 
     statusEl.textContent = `Fetched ${emails.length} emails. Classifying with AI...`;
 
-    const { applications = [] } = await chrome.storage.local.get('applications');
-    const result = matchEmailsToApplications(emails, applications);
+    // Load applications from backend
+    const { sessionToken } = await chrome.storage.local.get('sessionToken');
+    const appsRes = await fetch('http://localhost:3001/api/applications', {
+      headers: { Authorization: `Bearer ${sessionToken}` }
+    });
+    const applications = appsRes.ok ? await appsRes.json() : [];
 
-    await chrome.storage.local.set({ applications: result.updated });
+    const result = await matchEmailsToApplications(emails, applications);
+
+    // Write only the changed apps back via API
+    const originalStatuses = new Map(applications.map(a => [a.id, a.status]));
+    const updates = result.updated.filter(a => originalStatuses.get(a.id) !== a.status);
+
+    await Promise.all(updates.map(app =>
+      fetch(`http://localhost:3001/api/applications/${app.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionToken}`
+        },
+        body: JSON.stringify({ status: app.status, updatedAt: app.updatedAt })
+      })
+    ));
+
     statusEl.textContent = `Done — ${result.changedCount} application${result.changedCount !== 1 ? 's' : ''} updated.`;
-
-    // Reload the table to reflect changes
     setTimeout(() => location.reload(), 1500);
 
   } catch (err) {

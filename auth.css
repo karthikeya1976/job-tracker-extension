@@ -1,0 +1,196 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #f9fafb;
+  --surface:   #ffffff;
+  --primary:   #2563eb;
+  --primary-h: #1d4ed8;
+  --danger:    #dc2626;
+  --success:   #15803d;
+  --text:      #111827;
+  --muted:     #6b7280;
+  --border:    #e5e7eb;
+  --radius:    8px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:      #0f172a;
+    --surface: #1e293b;
+    --text:    #f1f5f9;
+    --muted:   #94a3b8;
+    --border:  #334155;
+  }
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+/* ── Card ─────────────────────────────────────── */
+.auth-bg { width: 100%; display: flex; justify-content: center; }
+
+.auth-card {
+  background: var(--surface);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.08);
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Screens ──────────────────────────────────── */
+.screen { display: none; flex-direction: column; gap: 14px; }
+.screen.active { display: flex; }
+
+/* entry animation */
+.screen.active { animation: slideIn 180ms ease-out both; }
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Brand ────────────────────────────────────── */
+.brand { text-align: center; margin-bottom: 8px; }
+.brand-icon { font-size: 32px; }
+.brand h1 { font-size: 22px; margin: 6px 0 4px; }
+.subtitle { color: var(--muted); font-size: 13px; }
+
+/* ── Step header ─────────────────────────────── */
+.step-header { display: flex; flex-direction: column; gap: 6px; }
+.step-header h2 { font-size: 18px; }
+.steps { display: flex; gap: 6px; }
+.step {
+  height: 4px; flex: 1; border-radius: 2px;
+  background: var(--border);
+  transition: background .3s;
+}
+.step.active { background: var(--primary); }
+
+/* ── Form elements ────────────────────────────── */
+label { font-size: 13px; font-weight: 600; color: var(--text); }
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color .15s;
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+
+input.invalid { border-color: var(--danger); }
+
+.name-row { display: flex; gap: 10px; }
+.name-row .field { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+
+/* ── Password toggle ─────────────────────────── */
+.input-wrap { position: relative; }
+.input-wrap input { padding-right: 52px; }
+.toggle-pw {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; font-size: 12px; color: var(--muted);
+  cursor: pointer; padding: 2px 4px;
+}
+.toggle-pw:hover { color: var(--text); }
+
+/* ── Strength bar ─────────────────────────────── */
+.strength-bar {
+  height: 4px; background: var(--border);
+  border-radius: 2px; overflow: hidden; margin-top: -6px;
+}
+.strength-fill {
+  height: 100%; width: 0; border-radius: 2px;
+  transition: width .3s, background .3s;
+}
+.strength-label { font-size: 11px; color: var(--muted); margin-top: -8px; min-height: 14px; }
+
+/* ── Buttons ─────────────────────────────────── */
+.btn-primary {
+  width: 100%; padding: 11px;
+  background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: background .15s, opacity .15s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-primary:hover { background: var(--primary-h); }
+.btn-primary:disabled { opacity: .6; cursor: default; }
+
+.btn-ghost {
+  width: 100%; padding: 11px;
+  background: none; color: var(--muted);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  font-size: 14px; cursor: pointer;
+  transition: background .15s;
+}
+.btn-ghost:hover { background: var(--bg); }
+
+/* spinner inside button */
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Alerts ───────────────────────────────────── */
+.alert {
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.alert-error   { background: #fef2f2; color: var(--danger); border: 1px solid #fecaca; }
+.alert-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
+
+@media (prefers-color-scheme: dark) {
+  .alert-error   { background: #450a0a; border-color: #7f1d1d; }
+  .alert-success { background: #052e16; border-color: #14532d; }
+}
+
+/* ── Aux links ───────────────────────────────── */
+.aux-links {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+}
+.aux-links a { color: var(--primary); text-decoration: none; }
+.aux-links a:hover { text-decoration: underline; }
+.sep { margin: 0 6px; }
+
+/* ── Avatar ──────────────────────────────────── */
+.avatar-section { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+
+.avatar-preview {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: var(--border); display: flex;
+  align-items: center; justify-content: center;
+  font-size: 28px; color: var(--muted);
+  overflow: hidden;
+}
+.avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+.avatar-btn {
+  width: auto; padding: 7px 16px; font-size: 13px;
+  display: inline-block; text-align: center;
+}

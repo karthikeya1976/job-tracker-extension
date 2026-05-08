@@ -1,110 +1,125 @@
-// Listens for messages from popup
-// ============================================
-// JOB INFO EXTRACTOR
-// Tries multiple strategies in order of reliability
-// ============================================
+// ── Job info extractor — runs as injected content script ─────────────────────
 
 function extractJobInfo() {
   const info = { role: '', company: '' };
 
-  // STRATEGY 1: JSON-LD structured data (most reliable)
-  // Many job sites embed machine-readable data in script tags
-  const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
-  for (const script of jsonLdScripts) {
+  // STRATEGY 1: JSON-LD structured data (most reliable — works on many boards)
+  for (const el of document.querySelectorAll('script[type="application/ld+json"]')) {
     try {
-      const data = JSON.parse(script.textContent);
-      if (data['@type'] === 'JobPosting') {
-        info.role = data.title || '';
+      const raw  = JSON.parse(el.textContent);
+      const data = Array.isArray(raw)
+        ? raw.find(i => i['@type'] === 'JobPosting')
+        : raw;
+      if (data?.['@type'] === 'JobPosting') {
+        info.role    = data.title || '';
         info.company = data.hiringOrganization?.name || '';
-        if (info.role) return info; // Found it! Stop searching.
+        if (info.role) { return clean(info); }
       }
-    } catch (e) { /* Invalid JSON, skip */ }
+    } catch {}
   }
 
   // STRATEGY 2: Site-specific selectors
-  const hostname = window.location.hostname;
+  const h = window.location.hostname;
 
-  if (hostname.includes('linkedin.com')) {
-    info.role = document.querySelector('.job-details-jobs-unified-top-card__job-title h1')?.innerText
-             || document.querySelector('.jobs-unified-top-card__job-title h1')?.innerText
-             || document.querySelector('h1.t-24')?.innerText
-             || '';
-    info.company = document.querySelector('.job-details-jobs-unified-top-card__company-name a')?.innerText
-                || document.querySelector('.jobs-unified-top-card__company-name a')?.innerText
-                || document.querySelector('.topcard__org-name-link')?.innerText
-                || '';
+  if (h.includes('linkedin.com')) {
+    info.role =
+      document.querySelector('.job-details-jobs-unified-top-card__job-title h1')?.innerText ||
+      document.querySelector('.jobs-unified-top-card__job-title h1')?.innerText ||
+      document.querySelector('h1.t-24')?.innerText ||
+      document.querySelector('h1[class*="job-title"]')?.innerText ||
+      '';
+    info.company =
+      document.querySelector('.job-details-jobs-unified-top-card__company-name a')?.innerText ||
+      document.querySelector('.job-details-jobs-unified-top-card__company-name')?.innerText ||
+      document.querySelector('.jobs-unified-top-card__company-name a')?.innerText ||
+      document.querySelector('.topcard__org-name-link')?.innerText ||
+      document.querySelector('a[class*="company-name"]')?.innerText ||
+      '';
   }
-  else if (hostname.includes('greenhouse.io')) {
-    info.role = document.querySelector('#header h1.app-title')?.innerText || '';
-    info.company = document.querySelector('#header .company-name')?.innerText || '';
+  else if (h.includes('indeed.com')) {
+    info.role =
+      document.querySelector('h1.jobsearch-JobInfoHeader-title')?.innerText ||
+      document.querySelector('[class*="jobTitle"] h1')?.innerText ||
+      document.querySelector('h1[data-testid="jobsearch-JobInfoHeader-title"]')?.innerText ||
+      '';
+    info.company =
+      document.querySelector('[data-company-name]')?.dataset.companyName ||
+      document.querySelector('[class*="companyName"] a')?.innerText ||
+      document.querySelector('[class*="companyName"]')?.innerText ||
+      '';
   }
-  else if (hostname.includes('lever.co')) {
-    info.role = document.querySelector('.posting-headline h2')?.innerText || '';
+  else if (h.includes('greenhouse.io')) {
+    info.role    = document.querySelector('#header h1.app-title')?.innerText || document.querySelector('#header h1')?.innerText || '';
+    info.company = document.querySelector('#header .company-name')?.innerText || document.querySelector('.company-name')?.innerText || '';
+  }
+  else if (h.includes('lever.co')) {
+    info.role    = document.querySelector('.posting-headline h2')?.innerText || document.querySelector('h2')?.innerText || '';
     info.company = document.querySelector('.main-header-text .large-category-label')?.innerText || '';
   }
+  else if (h.includes('workday') || h.includes('myworkdayjobs')) {
+    info.role    = document.querySelector('[data-automation-id="jobPostingHeader"]')?.innerText || '';
+    info.company = document.querySelector('[data-automation-id="company"]')?.innerText || '';
+  }
+  else if (h.includes('smartrecruiters.com')) {
+    info.role    = document.querySelector('h1.job-title')?.innerText || '';
+    info.company = document.querySelector('.company-name')?.innerText || '';
+  }
+  else if (h.includes('ashbyhq.com') || h.includes('jobs.ashby.io')) {
+    info.role    = document.querySelector('h1')?.innerText || '';
+    info.company = document.querySelector('[class*="company"]')?.innerText || '';
+  }
 
-  // STRATEGY 3: Generic fallback — look for the biggest heading
+  // STRATEGY 3: Generic fallback — biggest heading on the page
   if (!info.role) {
     info.role = document.querySelector('h1')?.innerText?.trim() || '';
   }
 
-  // Clean up: remove newlines and extra spaces
-  info.role = info.role.replace(/\s+/g, ' ').trim().substring(0, 100);
-  info.company = info.company.replace(/\s+/g, ' ').trim().substring(0, 100);
+  return clean(info);
+}
 
+function clean(info) {
+  info.role    = info.role.replace(/\s+/g, ' ').trim().substring(0, 100);
+  info.company = info.company.replace(/\s+/g, ' ').trim().substring(0, 100);
   return info;
 }
 
-// Listen for popup asking for job info
+// ── Message listener ──────────────────────────────────────────────────────────
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getJobInfo') {
     sendResponse(extractJobInfo());
   }
   return true;
 });
-// ============================================
-// AUTO-DETECTION: Watch for Apply button clicks
-// ============================================
 
-function isApplyButton(element) {
-  const text = element.innerText?.toLowerCase() || '';
-  const ariaLabel = element.getAttribute('aria-label')?.toLowerCase() || '';
-  const classList = element.className?.toLowerCase() || '';
-
-  const applyKeywords = ['apply now', 'apply for', 'submit application',
-                          'easy apply', 'quick apply', '1-click apply'];
-
-  return applyKeywords.some(keyword =>
-    text.includes(keyword) || ariaLabel.includes(keyword) || classList.includes('apply')
-  );
+// ── Auto-detect Apply button clicks ──────────────────────────────────────────
+function isApplyButton(el) {
+  const text  = (el.innerText || '').toLowerCase();
+  const aria  = (el.getAttribute('aria-label') || '').toLowerCase();
+  const klass = (el.className || '').toLowerCase();
+  const keywords = ['apply now', 'apply for', 'submit application', 'easy apply', 'quick apply', '1-click apply'];
+  return keywords.some(k => text.includes(k) || aria.includes(k) || klass.includes('apply'));
 }
 
-// Watch for clicks on apply buttons
-document.addEventListener('click', (event) => {
-  const target = event.target.closest('button, a, [role="button"]');
+document.addEventListener('click', (e) => {
+  const target = e.target.closest('button, a, [role="button"]');
   if (target && isApplyButton(target)) {
-    const jobInfo = extractJobInfo();
-    // Notify background script that user may be applying
     chrome.runtime.sendMessage({
       action: 'applicationDetected',
-      data: { ...jobInfo, url: window.location.href }
+      data: { ...extractJobInfo(), url: window.location.href }
     });
   }
-}, true); // 'true' = capture phase, catches events before they're processed
+}, true);
 
-// Also watch for URL changes (Single Page Apps like LinkedIn change URL without reload)
-let lastUrl = window.location.href;
-const urlObserver = new MutationObserver(() => {
-  if (window.location.href !== lastUrl) {
-    lastUrl = window.location.href;
-    if (window.location.href.includes('/application') ||
-        window.location.href.includes('/apply')) {
-      const jobInfo = extractJobInfo();
+// ── SPA URL change observer ───────────────────────────────────────────────────
+let lastUrl = location.href;
+new MutationObserver(() => {
+  if (location.href !== lastUrl) {
+    lastUrl = location.href;
+    if (/\/(application|apply)/.test(location.href)) {
       chrome.runtime.sendMessage({
         action: 'applicationDetected',
-        data: { ...jobInfo, url: window.location.href }
+        data: { ...extractJobInfo(), url: location.href }
       });
     }
   }
-});
-urlObserver.observe(document.body, { subtree: true, childList: true });
+}).observe(document.body, { subtree: true, childList: true });

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Job Tracker — Connect</title>
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="auth-bg">
+    <div class="auth-card">
+
+      <div class="brand">
+        <span class="brand-icon">💼</span>
+        <h1>Job Tracker</h1>
+        <p class="subtitle">Connect to your dashboard</p>
+      </div>
+
+      <div id="connect-error" class="alert alert-error" hidden></div>
+      <div id="connect-success" class="alert alert-success" hidden></div>
+
+      <p class="subtitle" style="margin-bottom:16px; text-align:left; color:#94a3b8; font-size:13px;">
+        1. Open <strong style="color:#e2e8f0">Job Tracker</strong> at
+           <a href="http://localhost:5173/profile" target="_blank" style="color:#6366f1">localhost:5173/profile</a><br>
+        2. Go to <strong style="color:#e2e8f0">Profile &amp; Settings → Chrome Extension</strong><br>
+        3. Click <strong style="color:#e2e8f0">Generate Token</strong>, then copy it<br>
+        4. Paste it below
+      </p>
+
+      <label for="token-input">Extension Token</label>
+      <input type="text" id="token-input" placeholder="Paste your token here…" autocomplete="off">
+
+      <button id="connect-btn" class="btn-primary" data-label="Connect">Connect</button>
+
+    </div>
+  </div>
+  <script src="auth.js"></script>
+</body>
+</html>

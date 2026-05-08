@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "Track your job applications automatically",
   "permissions": ["storage", "activeTab", "scripting", "identity"],
+  "host_permissions": ["http://localhost:3001/*"],
   "oauth2": {
     "client_id": "469933912167-38odv5r81vea6ehishmapthqiopoiif1.apps.googleusercontent.com",
     "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
@@ -13,19 +14,33 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://www.linkedin.com/*", "*://boards.greenhouse.io/*",
-                  "*://jobs.lever.co/*", "*://*.myworkdayjobs.com/*",
-                  "*://www.indeed.com/*"],
+      "matches": [
+        "*://www.linkedin.com/*",
+        "*://boards.greenhouse.io/*",
+        "*://jobs.lever.co/*",
+        "*://*.myworkdayjobs.com/*",
+        "*://*.workday.com/*",
+        "*://www.indeed.com/*",
+        "*://www.smartrecruiters.com/*",
+        "*://jobs.ashby.io/*",
+        "*://*.ashbyhq.com/*",
+        "*://jobs.jobvite.com/*",
+        "*://*.icims.com/*",
+        "*://careers.google.com/*",
+        "*://jobs.apple.com/*",
+        "*://www.ziprecruiter.com/*",
+        "*://www.glassdoor.com/*"
+      ],
       "js": ["content.js"]
     }
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "web_accessible_resources" : [
-  {
-    "resources": ["dashboard.html"],
-    "matches": ["<all_urls>"]
-  }
-]
+  "web_accessible_resources": [
+    {
+      "resources": ["auth.html", "auth.css", "auth.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
