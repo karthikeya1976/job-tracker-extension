@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = 'https://YOUR_APP.railway.app/api';
 
 // ─── Company name normalization (mirrors backend/utils/normalize.js) ───────────
 const STRIP_SUFFIXES = new Set([
@@ -282,5 +282,5 @@ async function submitEvent(companyName, appliedAt) {
 document.getElementById('bookmark').addEventListener('click', () => saveApplication('saved'));
 document.getElementById('applied').addEventListener('click',  () => saveApplication('applied'));
 document.getElementById('view-all').addEventListener('click', () => {
-  chrome.tabs.create({ url: 'http://localhost:5173/dashboard' });
+  chrome.tabs.create({ url: 'https://YOUR_APP.railway.app/dashboard' });
 });
